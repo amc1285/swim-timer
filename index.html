@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Swim Race Timer</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#ffffff;--bg2:#f4f4f4;--bg3:#e8e8e8;
+    --text:#111111;--text2:#555555;--text3:#888888;
+    --border:rgba(0,0,0,0.15);--border2:rgba(0,0,0,0.25);
+    --blue:#185FA5;--blue-dark:#0C447C;--blue-light:#E6F1FB;--blue-text:#0C447C;
+    --green:#1D9E75;--green-dark:#0F6E56;
+    --purple:#534AB7;--purple-dark:#3C3489;
+    --orange:#D85A30;--orange-dark:#993C1D;
+    --red:#A32D2D;--red-dark:#791F1F;--red-light:#FCEBEB;--red-text:#A32D2D;
+    --teal-light:#E1F5EE;--teal-text:#085041;
+    --coral-light:#FAECE7;--coral-text:#712B13;
+    --radius:8px;--radius-lg:12px;
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;
+      --text:#f0f0f0;--text2:#aaaaaa;--text3:#777777;
+      --border:rgba(255,255,255,0.12);--border2:rgba(255,255,255,0.22);
+      --blue:#378ADD;--blue-dark:#85B7EB;--blue-light:#0C447C;--blue-text:#85B7EB;
+      --green:#1D9E75;--green-dark:#5DCAA5;
+      --purple:#7F77DD;--purple-dark:#AFA9EC;
+      --orange:#D85A30;--orange-dark:#F0997B;
+      --red:#E24B4A;--red-dark:#F09595;--red-light:#3a1515;--red-text:#F09595;
+      --teal-light:#085041;--teal-text:#9FE1CB;
+      --coral-light:#712B13;--coral-text:#F5C4B3;
+    }
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.5;min-height:100vh}
+  .screen{max-width:500px;margin:0 auto;padding:1rem}
+  .hidden{display:none!important}
+  h1{font-size:20px;font-weight:500;margin-bottom:1.25rem;text-align:center;color:var(--text)}
+  h2{font-size:16px;font-weight:500;margin-bottom:.75rem;color:var(--text)}
+  .card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:.75rem}
+  .lbl{font-size:12px;color:var(--text2);margin-bottom:4px;display:block}
+
+  .big-time{font-size:56px;font-weight:500;letter-spacing:-2px;text-align:center;font-variant-numeric:tabular-nums;color:var(--text);line-height:1.1}
+  .split-time{font-size:20px;font-weight:400;text-align:center;color:var(--text2);font-variant-numeric:tabular-nums;margin-top:6px}
+
+  button{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;border-radius:var(--radius);border:0.5px solid var(--border2);background:transparent;color:var(--text);font-size:14px;font-weight:500;cursor:pointer;transition:background .1s,transform .08s,opacity .1s;min-height:44px;font-family:inherit;-webkit-tap-highlight-color:transparent}
+  button:hover{background:var(--bg2)}
+  button:active{transform:scale(.96)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
+  .btn-primary:hover{background:var(--blue-dark);border-color:var(--blue-dark)}
+  .btn-start{background:var(--green);border-color:var(--green);color:#fff;font-size:18px;padding:16px;width:100%;border-radius:var(--radius-lg)}
+  .btn-start:hover{background:var(--green-dark)}
+  .btn-breakout{background:var(--blue);border-color:var(--blue);color:#fff;width:100%;font-size:17px;padding:14px}
+  .btn-breakout:hover{background:var(--blue-dark)}
+  .btn-stroke{background:var(--purple);border-color:var(--purple);color:#fff;width:100%;font-size:20px;padding:18px;border-radius:var(--radius-lg)}
+  .btn-stroke:hover{background:var(--purple-dark)}
+  .btn-turn{background:var(--orange);border-color:var(--orange);color:#fff;font-size:16px;padding:12px;flex:1}
+  .btn-turn:hover{background:var(--orange-dark)}
+  .btn-finish{background:var(--red);border-color:var(--red);color:#fff;font-size:16px;padding:12px;flex:1}
+  .btn-finish:hover{background:var(--red-dark)}
+  .btn-danger{background:var(--red-light);border-color:var(--red-text);color:var(--red-text);font-size:12px;padding:6px 12px}
+  .btn-row{display:flex;gap:8px}
+  .btn-row button{flex:1}
+
+  select,input[type=text],input[type=email]{padding:8px 12px;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--bg);color:var(--text);font-size:14px;cursor:pointer;height:40px;font-family:inherit;width:100%}
+  select:focus,input:focus{outline:none;border-color:var(--blue)}
+
+  .course-toggle{display:flex;gap:0;border:0.5px solid var(--border2);border-radius:var(--radius);overflow:hidden}
+  .course-toggle button{border:none;border-radius:0;flex:1;font-size:15px;padding:10px}
+  .course-toggle button.active{background:var(--blue);color:#fff}
+  .course-toggle button:not(.active):hover{background:var(--bg2)}
+
+  .metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:.75rem}
+  .metric-card{background:var(--bg2);border-radius:var(--radius);padding:.75rem;text-align:center}
+  .metric-val{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--text)}
+  .metric-lbl{font-size:11px;color:var(--text2);margin-top:2px}
+
+  .phase-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-bottom:.75rem}
+  .phase-bo{background:var(--blue-light);color:var(--blue-text)}
+  .phase-swim{background:var(--teal-light);color:var(--teal-text)}
+  .phase-turn{background:var(--coral-light);color:var(--coral-text)}
+
+  .progress-wrap{margin-bottom:.5rem}
+  .progress-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+  .progress-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .3s}
+  .length-lbl{font-size:13px;color:var(--text2);text-align:center;margin-bottom:.4rem}
+
+  .stroke-count{font-size:72px;font-weight:500;text-align:center;color:var(--purple);font-variant-numeric:tabular-nums;line-height:1;margin:.5rem 0}
+
+  table{width:100%;font-size:13px;border-collapse:collapse;table-layout:fixed}
+  th{text-align:left;padding:6px 6px;font-weight:500;border-bottom:0.5px solid var(--border);color:var(--text2);font-size:11px}
+  td{padding:6px 6px;border-bottom:0.5px solid var(--border);font-variant-numeric:tabular-nums;color:var(--text)}
+  tr:last-child td{border-bottom:none}
+  .td-r{text-align:right}
+
+  .setup-row{margin-bottom:1rem}
+  .setup-row label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500}
+
+  .summary-big{font-size:48px;font-weight:500;text-align:center;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-1px}
+  .summary-sub{font-size:14px;color:var(--text2);text-align:center;margin-top:4px}
+
+  .export-section{display:flex;gap:8px;flex-wrap:wrap;margin-top:.75rem}
+  .export-section button{flex:1;min-width:120px}
+
+  .modal-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;padding:1rem;border-radius:var(--radius-lg)}
+  .modal{background:var(--bg);border-radius:var(--radius-lg);padding:1.25rem;width:100%;max-width:360px;border:0.5px solid var(--border)}
+  .modal h2{margin-bottom:1rem}
+  .modal .lbl{font-size:13px;margin-bottom:4px}
+  .modal input{margin-bottom:.75rem}
+  .modal-btns{display:flex;gap:8px;margin-top:.25rem}
+  .modal-btns button{flex:1}
+
+  #chart-wrap{position:relative;height:200px;margin-top:.5rem}
+
+  .swimmer-field{margin-bottom:1rem}
+
+  @media(max-width:380px){
+    .big-time{font-size:44px}
+    .stroke-count{font-size:56px}
+    .metric-val{font-size:18px}
+  }
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="screen-setup" class="screen">
+  <h1>Swim Race Timer</h1>
+
+  <div class="card">
+    <div class="setup-row swimmer-field">
+      <label for="swimmer-name">Swimmer name (optional)</label>
+      <input type="text" id="swimmer-name" placeholder="e.g. Jane Smith">
+    </div>
+
+    <div class="setup-row">
+      <label>Course</label>
+      <div class="course-toggle">
+        <button id="btn-scy" class="active" onclick="setCourse('SCY')">SCY (25 yd)</button>
+        <button id="btn-lcm" onclick="setCourse('LCM')">LCM (50 m)</button>
+      </div>
+    </div>
+
+    <div class="setup-row">
+      <label for="sel-dist">Distance</label>
+      <select id="sel-dist" onchange="setDist(this.value)">
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="200">200</option>
+        <option value="400">400 / 500 SCY</option>
+      </select>
+    </div>
+
+    <div class="setup-row">
+      <label for="sel-stroke">Stroke (for records)</label>
+      <select id="sel-stroke">
+        <option>Freestyle</option>
+        <option>Backstroke</option>
+        <option>Breaststroke</option>
+        <option>Butterfly</option>
+        <option>IM</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="font-size:13px;color:var(--text2);margin-bottom:1rem;padding:0 .25rem">
+    Flow: <strong>Start</strong> &rarr; tap <strong>Breakout</strong> when swimmer surfaces &rarr; tap <strong>Stroke</strong> each cycle &rarr; tap <strong>Turn</strong> at wall &rarr; repeat &rarr; <strong>Finish</strong> on last length.
+  </div>
+
+  <button class="btn-start" onclick="startRace()">Start race</button>
+</div>
+
+<!-- RACE SCREEN -->
+<div id="screen-race" class="screen hidden">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+    <span id="race-label" style="font-size:13px;font-weight:500;color:var(--text2)"></span>
+    <button class="btn-danger" onclick="confirmReset()">Reset</button>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="length-lbl" id="length-lbl">Length 1 of 2</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="card" style="text-align:center;padding:1.25rem 1rem;margin-top:.5rem">
+    <div><span id="phase-badge" class="phase-badge phase-bo">Breakout</span></div>
+    <div class="big-time" id="display-total">0:00.00</div>
+    <div class="split-time" id="display-split">split —</div>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-val" id="m-bo">—</div>
+      <div class="metric-lbl">Breakout (s)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" id="m-strokes">0</div>
+      <div class="metric-lbl">Strokes</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" id="m-spm">—</div>
+      <div class="metric-lbl">SPM</div>
+    </div>
+  </div>
+
+  <!-- BREAKOUT BUTTON -->
+  <div id="wrap-bo" class="card">
+    <span class="lbl">Tap when swimmer surfaces after start / turn</span>
+    <button class="btn-breakout" onclick="tapBreakout()">Breakout</button>
+  </div>
+
+  <!-- STROKE BUTTON -->
+  <div id="wrap-stroke" class="card hidden">
+    <span class="lbl">Tap each stroke cycle</span>
+    <div class="stroke-count" id="stroke-count">0</div>
+    <button class="btn-stroke" onclick="tapStroke()">Stroke</button>
+  </div>
+
+  <!-- TURN / FINISH BUTTONS -->
+  <div id="wrap-turn" class="card hidden">
+    <div class="btn-row">
+      <button class="btn-turn" onclick="tapTurn()">Turn</button>
+      <button class="btn-finish hidden" id="btn-finish" onclick="finishRace()">Finish</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="screen-results" class="screen hidden">
+  <div id="results-inner"></div>
+</div>
+
+<!-- EMAIL MODAL -->
+<div id="modal-wrap" class="hidden" style="position:relative">
+  <div class="screen">
+    <div class="card" style="position:relative">
+      <div class="modal">
+        <h2>Email results as CSV</h2>
+        <span class="lbl">Your email address</span>
+        <input type="email" id="email-input" placeholder="you@example.com">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:.75rem">This opens your device email app with the CSV data pre-filled in the body. Copy it from there or send it directly.</p>
+        <div class="modal-btns">
+          <button onclick="closeModal()">Cancel</button>
+          <button class="btn-primary" onclick="sendEmail()">Open email app</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+var course = 'SCY';
+var dist = 50;
+var totalLengths = 2;
+var raceActive = false;
+var raceStart = 0, splitStart = 0, breakoutStart = 0;
+var timerInterval = null;
+var currentLength = 1;
+var phase = 'bo';
+var strokeTimes = [], strokeCount = 0;
+var breakoutTime = null;
+var lengths = [];
+var spmChart = null;
+
+var DIST_MAP = { SCY: { 50:2, 100:4, 200:8, 400:20 }, LCM: { 50:1, 100:2, 200:4, 400:8 } };
+
+function setCourse(c) {
+  course = c;
+  document.getElementById('btn-scy').className = (c==='SCY' ? 'active' : '');
+  document.getElementById('btn-lcm').className = (c==='LCM' ? 'active' : '');
+}
+
+function setDist(v) {
+  dist = parseInt(v);
+}
+
+function getLengths() {
+  var sel = document.getElementById('sel-dist').value;
+  dist = parseInt(sel);
+  var pool = course === 'LCM' ? 50 : 25;
+  if (course === 'SCY' && dist === 400) return 20;
+  return dist / pool;
+}
+
+function fmt(ms) {
+  var s = ms / 1000;
+  var m = Math.floor(s / 60); s = s - m * 60;
+  var ss = Math.floor(s);
+  var cs = Math.round((s - ss) * 100);
+  if (cs === 100) { cs = 0; ss++; if (ss === 60) { ss = 0; m++; } }
+  return m + ':' + (ss < 10 ? '0' : '') + ss + '.' + (cs < 10 ? '0' : '') + cs;
+}
+
+function fmtSec(ms) { return (ms / 1000).toFixed(2); }
+
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+function startRace() {
+  totalLengths = getLengths();
+  show('screen-race');
+  hide('screen-setup');
+  hide('screen-results');
+  hide('modal-wrap');
+
+  var swimmer = document.getElementById('swimmer-name').value.trim();
+  var stroke = document.getElementById('sel-stroke').value;
+  var label = (swimmer ? swimmer + ' — ' : '') + dist + ' ' + course + ' ' + stroke + ' (' + totalLengths + ' lengths)';
+  document.getElementById('race-label').textContent = label;
+
+  currentLength = 1; lengths = []; phase = 'bo';
+  strokeTimes = []; strokeCount = 0; breakoutTime = null;
+  updateLengthUI();
+
+  raceActive = true;
+  raceStart = performance.now();
+  splitStart = raceStart;
+  breakoutStart = raceStart;
+
+  timerInterval = setInterval(tick, 33);
+  setPhaseBadge('bo');
+  show('wrap-bo');
+  hide('wrap-stroke');
+  hide('wrap-turn');
+  resetMetrics();
+}
+
+function tick() {
+  if (!raceActive) return;
+  var now = performance.now();
+  document.getElementById('display-total').textContent = fmt(now - raceStart);
+  document.getElementById('display-split').textContent = 'split ' + fmt(now - splitStart);
+  if (phase === 'stroke' && strokeTimes.length >= 2) {
+    var last2 = strokeTimes.slice(-2);
+    var iv = (last2[1] - last2[0]) / 1000;
+    if (iv > 0) document.getElementById('m-spm').textContent = Math.round(60 / iv);
+  }
+}
+
+function tapBreakout() {
+  var now = performance.now();
+  breakoutTime = (now - breakoutStart) / 1000;
+  document.getElementById('m-bo').textContent = breakoutTime.toFixed(2);
+  phase = 'stroke';
+  setPhaseBadge('swim');
+  hide('wrap-bo');
+  show('wrap-stroke');
+  show('wrap-turn');
+  strokeTimes = []; strokeCount = 0;
+  document.getElementById('stroke-count').textContent = '0';
+  document.getElementById('m-strokes').textContent = '0';
+  document.getElementById('m-spm').textContent = '—';
+  var isLast = currentLength === totalLengths;
+  if (isLast) {
+    show('btn-finish');
+    if (totalLengths === 1) hide('wrap-turn');
+  } else {
+    hide('btn-finish');
+  }
+}
+
+function tapStroke() {
+  var now = performance.now();
+  strokeTimes.push(now);
+  strokeCount++;
+  document.getElementById('stroke-count').textContent = strokeCount;
+  document.getElementById('m-strokes').textContent = strokeCount;
+  if (strokeTimes.length >= 2) {
+    var iv = (strokeTimes[strokeTimes.length-1] - strokeTimes[strokeTimes.length-2]) / 1000;
+    if (iv > 0) document.getElementById('m-spm').textContent = Math.round(60 / iv);
+  }
+}
+
+function tapTurn() {
+  var now = performance.now();
+  saveLengthData(now);
+  currentLength++;
+  splitStart = now;
+  breakoutStart = now;
+  strokeTimes = []; strokeCount = 0; breakoutTime = null;
+  phase = 'bo';
+  setPhaseBadge('bo');
+  document.getElementById('stroke-count').textContent = '0';
+  resetMetrics();
+  show('wrap-bo');
+  hide('wrap-stroke');
+  hide('wrap-turn');
+  hide('btn-finish');
+  updateLengthUI();
+  if (currentLength === totalLengths) show('btn-finish');
+}
+
+function finishRace() {
+  var now = performance.now();
+  clearInterval(timerInterval);
+  raceActive = false;
+  saveLengthData(now);
+  var totalMs = now - raceStart;
+  showResults(totalMs);
+}
+
+function saveLengthData(now) {
+  var splitMs = now - splitStart;
+  var spm = calcSPM();
+  lengths.push({
+    length: currentLength,
+    splitMs: splitMs,
+    breakoutSec: breakoutTime,
+    strokes: strokeCount,
+    spm: spm
+  });
+}
+
+function calcSPM() {
+  if (strokeTimes.length < 2) return null;
+  var dur = (strokeTimes[strokeTimes.length-1] - strokeTimes[0]) / 1000;
+  if (dur <= 0) return null;
+  return Math.round((strokeTimes.length - 1) / dur * 60);
+}
+
+function updateLengthUI() {
+  document.getElementById('length-lbl').textContent = 'Length ' + currentLength + ' of ' + totalLengths;
+  var pct = ((currentLength - 1) / totalLengths) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function setPhaseBadge(p) {
+  var b = document.getElementById('phase-badge');
+  b.className = 'phase-badge';
+  if (p === 'bo') { b.classList.add('phase-bo'); b.textContent = 'Breakout'; }
+  else if (p === 'swim') { b.classList.add('phase-swim'); b.textContent = 'Swimming'; }
+  else if (p === 'turn') { b.classList.add('phase-turn'); b.textContent = 'At wall'; }
+}
+
+function resetMetrics() {
+  document.getElementById('m-bo').textContent = '—';
+  document.getElementById('m-strokes').textContent = '0';
+  document.getElementById('m-spm').textContent = '—';
+}
+
+function confirmReset() {
+  if (confirm('Reset this race?')) resetAll();
+}
+
+function resetAll() {
+  clearInterval(timerInterval);
+  raceActive = false; phase = 'bo'; lengths = [];
+  strokeTimes = []; strokeCount = 0; breakoutTime = null; currentLength = 1;
+  if (spmChart) { spmChart.destroy(); spmChart = null; }
+  hide('screen-race');
+  hide('screen-results');
+  hide('modal-wrap');
+  show('screen-setup');
+}
+
+function showResults(totalMs) {
+  show('screen-results');
+  hide('screen-race');
+
+  var swimmer = document.getElementById('swimmer-name').value.trim() || 'Swimmer';
+  var stroke = document.getElementById('sel-stroke').value;
+  var event = dist + ' ' + course + ' ' + stroke;
+  var cumMs = 0;
+
+  var rows = lengths.map(function(l) {
+    cumMs += l.splitMs;
+    return '<tr>' +
+      '<td>' + l.length + '</td>' +
+      '<td class="td-r">' + fmt(l.splitMs) + '</td>' +
+      '<td class="td-r">' + fmt(cumMs) + '</td>' +
+      '<td class="td-r">' + (l.breakoutSec !== null ? l.breakoutSec.toFixed(2) + 's' : '—') + '</td>' +
+      '<td class="td-r">' + l.strokes + '</td>' +
+      '<td class="td-r">' + (l.spm !== null ? l.spm : '—') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  var spmVals = lengths.map(function(l) { return l.spm || 0; });
+  var labels = lengths.map(function(l) { return 'L' + l.length; });
+
+  var now = new Date();
+  var dateStr = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+
+  document.getElementById('results-inner').innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">' +
+      '<div><div style="font-size:14px;font-weight:500">' + swimmer + '</div>' +
+        '<div style="font-size:12px;color:var(--text2)">' + event + ' &mdash; ' + dateStr + '</div>' +
+      '</div>' +
+      '<button class="btn-danger" onclick="resetAll()">New race</button>' +
+    '</div>' +
+
+    '<div class="card" style="text-align:center;padding:1.25rem">' +
+      '<div class="summary-sub">Final time</div>' +
+      '<div class="summary-big">' + fmt(totalMs) + '</div>' +
+      '<div class="summary-sub">' + event + '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<h2>Length splits</h2>' +
+      '<div style="overflow-x:auto">' +
+        '<table><thead><tr>' +
+          '<th>Len</th><th class="td-r">Split</th><th class="td-r">Cumul.</th>' +
+          '<th class="td-r">Breakout</th><th class="td-r">Strokes</th><th class="td-r">SPM</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<h2>Stroke rate (SPM) by length</h2>' +
+      '<div id="chart-wrap"><canvas id="spm-chart" role="img" aria-label="Line chart of strokes per minute by length. Values: ' + spmVals.join(', ') + '">SPM data: ' + spmVals.join(', ') + '</canvas></div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<h2>Export results</h2>' +
+      '<div class="export-section">' +
+        '<button class="btn-primary" onclick="downloadCSV()">Download CSV</button>' +
+        '<button onclick="openEmailModal()">Email CSV</button>' +
+      '</div>' +
+    '</div>';
+
+  setTimeout(function() {
+    var ctx = document.getElementById('spm-chart');
+    if (!ctx || !window.Chart) return;
+    if (spmChart) spmChart.destroy();
+    spmChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'SPM',
+          data: spmVals,
+          borderColor: '#534AB7',
+          backgroundColor: 'rgba(83,74,183,0.12)',
+          pointBackgroundColor: '#534AB7',
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) { return 'SPM: ' + ctx.parsed.y; }
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { autoSkip: false, color: '#888', font: { size: 11 } }, grid: { color: 'rgba(128,128,128,0.1)' } },
+          y: {
+            beginAtZero: false,
+            ticks: { color: '#888', font: { size: 11 } },
+            grid: { color: 'rgba(128,128,128,0.1)' },
+            title: { display: true, text: 'Strokes per minute', color: '#888', font: { size: 11 } }
+          }
+        }
+      }
+    });
+  }, 150);
+}
+
+function buildCSV() {
+  var swimmer = document.getElementById('swimmer-name').value.trim() || 'Swimmer';
+  var stroke = document.getElementById('sel-stroke').value;
+  var event = dist + ' ' + course + ' ' + stroke;
+  var now = new Date().toLocaleDateString();
+  var cumMs = 0;
+  var lines = [
+    'Swim Race Timer Export',
+    'Swimmer,' + swimmer,
+    'Event,' + event,
+    'Date,' + now,
+    '',
+    'Length,Split,Cumulative,Breakout (s),Strokes,SPM'
+  ];
+  lengths.forEach(function(l) {
+    cumMs += l.splitMs;
+    lines.push([
+      l.length,
+      fmt(l.splitMs),
+      fmt(cumMs),
+      l.breakoutSec !== null ? l.breakoutSec.toFixed(2) : '',
+      l.strokes,
+      l.spm !== null ? l.spm : ''
+    ].join(','));
+  });
+  lines.push('');
+  lines.push('Final time,' + fmt(cumMs));
+  return lines.join('\n');
+}
+
+function downloadCSV() {
+  var csv = buildCSV();
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  var swimmer = document.getElementById('swimmer-name').value.trim().replace(/\s+/g,'_') || 'swimmer';
+  a.href = url;
+  a.download = swimmer + '_' + dist + course + '_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function openEmailModal() {
+  show('modal-wrap');
+  document.getElementById('screen-results').style.display = 'none';
+  setTimeout(function(){ document.getElementById('email-input').focus(); }, 100);
+}
+
+function closeModal() {
+  hide('modal-wrap');
+  document.getElementById('screen-results').style.display = '';
+}
+
+function sendEmail() {
+  var email = document.getElementById('email-input').value.trim();
+  if (!email) { alert('Please enter an email address.'); return; }
+  var swimmer = document.getElementById('swimmer-name').value.trim() || 'Swimmer';
+  var stroke = document.getElementById('sel-stroke').value;
+  var subject = encodeURIComponent(swimmer + ' — ' + dist + ' ' + course + ' ' + stroke + ' Results');
+  var csv = buildCSV();
+  var body = encodeURIComponent('Swim race results CSV data — paste into a .csv file or spreadsheet:\n\n' + csv);
+  window.location.href = 'mailto:' + encodeURIComponent(email) + '?subject=' + subject + '&body=' + body;
+  closeModal();
+}
+</script>
+</body>
+</html>
